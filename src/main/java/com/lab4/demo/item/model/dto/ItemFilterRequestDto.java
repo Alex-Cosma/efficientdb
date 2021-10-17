@@ -16,6 +16,4 @@ public class ItemFilterRequestDto {
     private final LocalDateTime createdAfter = null;
     @Builder.Default
     private final Boolean onlyExcellent = false;
-    @Builder.Default
-    private final Boolean withAdminReview = false;
 }

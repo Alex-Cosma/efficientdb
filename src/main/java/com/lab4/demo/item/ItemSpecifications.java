@@ -5,7 +5,11 @@ import com.lab4.demo.item.model.dto.ItemFilterRequestDto;
 import com.lab4.demo.review.model.Review;
 import org.springframework.data.jpa.domain.Specification;
 
-import javax.persistence.criteria.*;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
+
 import java.time.LocalDateTime;
 
 import static com.lab4.demo.review.Rating.EXCELENT;
@@ -13,7 +17,13 @@ import static java.util.Optional.ofNullable;
 
 public class ItemSpecifications {
 
-    public static Specification<Item> similarNames(String name) {
+
+    public static Specification<Item> withReviews() {
+        return (root, query, cb) -> root.fetch("reviews");
+    }
+
+
+        public static Specification<Item> similarNames(String name) {
         return (root, query, cb) -> cb.like(root.get("name"), name);
     }
 
@@ -22,23 +32,9 @@ public class ItemSpecifications {
     }
 
     public static Specification<Item> onlyExcellentRated() {
-        return (root, query, criteriaBuilder) -> criteriaBuilder.exists(reviewRatingSubquery(root,
-                query, criteriaBuilder));
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.exists(reviewRatingSubquery(root, query, criteriaBuilder));
     }
-
-//    public static Specification<Item> withAdministratorReviews() {
-//        return (root, query, criteriaBuilder) -> {
-//            query.distinct(true);
-//            final Root<Review> review = query.from(Review.class);
-//            final Root<User> user = query.from(User.class);
-//            final Join<Object, Object> role = user.join("roles", JoinType.INNER);
-//            return criteriaBuilder.and(
-//                    criteriaBuilder.equal(review.get("user"), user),
-//                    criteriaBuilder.equal(review.get("item"), root),
-//                    criteriaBuilder.equal(role.get("name"), ERole.ADMIN)
-//            );
-//        };
-//    }
 
     private static Subquery<Review> reviewRatingSubquery(Root<Item> root, CriteriaQuery<?> query,
                                                          CriteriaBuilder criteriaBuilder) {
@@ -51,12 +47,13 @@ public class ItemSpecifications {
         );
     }
 
-//    public static Specification<Item> specificationsFromFilter(ItemFilterRequestDto filter) {
-//        final Specification<Item> spec = (root, query, cb) -> cb.and();
-//        ofNullable(filter.getName()).ifPresent(s -> spec.and(similarNames(s)));
-//        ofNullable(filter.getCreatedAfter()).ifPresent(localDateTime -> spec.and(createdAfter(localDateTime)));
-//        if (filter.getOnlyExcellent()) spec.and(onlyExcellentRated());
-//        if (filter.getWithAdminReview()) spec.and(withAdministratorReviews());
-//        return spec;
-//    }
+    public static Specification<Item> specificationsFromFilter(ItemFilterRequestDto filter) {
+        final Specification<Item> spec = (root, query, cb) -> cb.and();
+        ofNullable(filter.getName()).ifPresent(s -> spec.and(similarNames(s)));
+        ofNullable(filter.getCreatedAfter()).ifPresent(localDateTime -> spec.and(createdAfter(localDateTime)));
+        if (filter.getOnlyExcellent()) {
+            spec.and(onlyExcellentRated());
+        }
+        return spec;
+    }
 }

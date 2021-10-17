@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static com.lab4.demo.Utils.randomString;
+import static javax.persistence.FetchType.LAZY;
 
 @Entity
 @Builder
@@ -23,15 +24,18 @@ public class Item {
     private Long id;
 
     @Column(length = 512, nullable = false)
-    private String nameCode;
+    private String name;
 
     @Column(length = 1024)
     private String description;
 
     @Column
+    private String statusCode;
+
+    @Column
     private LocalDateTime dateCreated;
 
-    @OneToMany(mappedBy = "item")
+    @OneToMany(mappedBy = "item", fetch = LAZY)
     @Builder.Default
     private Set<Review> reviews = new HashSet<>();
 
